@@ -1,0 +1,34 @@
+**********************************************************************
+**********************************************************************
+Build methods as follows:
+Method A:
+	1. cd mtv_50 
+
+	2. make buildall
+
+	then, you can get boot.bin loader.bin minios.bin
+
+Method B:
+	1. cd mtv_50 
+
+	2. make build_boot
+		you can get boot.bin
+
+	3. make build_minios
+		you can get minios.bin
+
+	4. make build_loader
+		you can get loader.bin
+
+Clean methods:
+	1. make cleanall
+		make clean for boot, minios and loader
+
+	2. make clean_boot
+		make clean for boot
+
+	3. make clean_minios
+		make clean for minios
+
+	4. make clean_loader
+		make clean for loader

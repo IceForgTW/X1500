@@ -1,0 +1,6 @@
+
+SOURCES	+= $(wildcard $(NORDIR)/*.c)
+CFLAGS	+= -DNORTYPE=$(NORTYPE)
+CFLAGS	+= -I$(NORDIR)
+VPATH   += $(NORDIR)
+

@@ -1,0 +1,3 @@
+SOURCES	+= $(wildcard $(UARTMCDIR)/*.c)
+CFLAGS	+= -I$(UARTMCDIR)
+VPATH   += $(UARTMCDIR)

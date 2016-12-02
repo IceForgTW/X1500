@@ -1,0 +1,6 @@
+SOURCES	+= $(wildcard $(PS2DIR)/*.c)
+CFLAGS	+= -DPS2TYPE=$(PS2TYPE)
+CFLAGS	+= -I$(PS2DIR)
+VPATH   += $(PS2DIR)
+
+
