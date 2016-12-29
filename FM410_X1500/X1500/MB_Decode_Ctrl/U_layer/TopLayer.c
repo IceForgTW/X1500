@@ -1926,6 +1926,7 @@ BOOL IsModeToReadCode()
 
 	switch(psParam->pCode->nReadMode) {
 	case ESC0: //静默模式,接受按键
+	
 		if (Z_KeyPressed()) //有按键,进入识读
 		{
 			if(!_sTrigReadFlag)
@@ -1942,11 +1943,11 @@ BOOL IsModeToReadCode()
 
 			if (bCaptureRun)
 				break;
-
 			U_appWillSleepTillWakeup(nGotoSleepDelay); //若已有3000ms内没有操作,则休眠 //读码成功就自动休眠
 		}//End of else;
 		break;
 	case ESC1: //单触发模式
+
 		if ((nRealOnceDelay==0)||(Z_Get10msCounter()-psParam->pMode->nReadDelay)*10 < nRealOnceDelay)
 		{//在超时限制内,可进行识读
 			bToRead = TRUE;
@@ -1961,6 +1962,7 @@ BOOL IsModeToReadCode()
 		break;
 	case ESC2: //自动模式
 		//////////////////////////////////////////////////////////////////////////
+
 		if (nRealOnceDelay < 500){
 			//不停读码
 			bToRead = TRUE;
@@ -2056,6 +2058,7 @@ BOOL IsModeToReadCode()
 		}//End of else;
 		break;
 	case ESC3: //连续模式
+
 		if (Z_KeyPressed()) //有按键,则切换为暂停识读状态
 		{
 			psParam->pMode->bContinue = (psParam->pMode->bContinue == FALSE);
@@ -2358,7 +2361,6 @@ UTImgParam * U_appChkToReadAndCapture(BOOL FirstFlag, int nDevMode)
 	static BOOL bInited = FALSE;
 	static UTImgParam _s_Img;
 
-	
 	if (bInited != TRUE)
 	{
 		U_appBKGrndProc();
@@ -2374,7 +2376,7 @@ UTImgParam * U_appChkToReadAndCapture(BOOL FirstFlag, int nDevMode)
 	capture_count++;
 
 	//拍图	
-// 	Y_commSendString("Went to read.\r\n");
+ 	Y_commSendString("Went to read.\r\n");
 	if(FirstFlag)
 	{
 		bCaptureRun = TRUE;
@@ -2613,9 +2615,6 @@ BOOL U_appProcDecodeEx(int nMode)
 			break;
 
 		bFirst = FALSE;
-
-
-
 
 		nInfoFlag = U_appDecodeWithMacro();
 		

@@ -350,8 +350,7 @@ void pwm_init(unsigned int chn)
 			__gpio_as_func0( GPIO_GROUP_C + 24);
 			break;
 	}
-
-  
+ 
     if(g_pwm_q == 0)
     {
     	g_pwm_q = os_QueueCreate(&msg_pwm[0],PWM_MSG_NUM);

@@ -34,11 +34,12 @@ int get_bsp_ver(void)
             printf("t1\n");
 			break;
  		case 0x07:
- 			_sver =  BSP_EM3086_V1; printf("t2\n");
+ 			_sver =  BSP_EM3086_V1;
+			printf("t2\n");
  			break;
-            case 0x05:
-                 printf("t3\n");
-                 break;
+        case 0x05:
+			printf("t3\n");
+			break;
 // 		case 0x08:
 // 			_sver = BSP_MB2033_V1;
 // 			break;
@@ -62,8 +63,7 @@ char *get_bsp_string(void)
 	switch (nver)
 	{
 	    case BSP_EM3086_V1:	return "EM3086";
-          case BSP_HR21_V1:  return "HR21";
-	
+        case BSP_HR21_V1:   return "HR21";
 	    case BSP_UNKNOW:	return "Unknow bsp ver";
 	}
 	return "Unknow bsp ver";
@@ -73,14 +73,28 @@ static void trigger_handle(unsigned int arg)
 {
 	__gpio_ack_irq(GPIO_GROUP_A+22);
 
-	if(!__gpio_get_pin(GPIO_GROUP_A+22))//下降沿
+	if(!__gpio_get_pin(GPIO_GROUP_A+22))			//下降沿
 	{
-		__gpio_as_irq_rise_edge(GPIO_GROUP_A+22);//改成上升沿中断
+		__gpio_as_irq_rise_edge(GPIO_GROUP_A+22);	//改成上升沿中断
 	}
 	else
 	{
-		__gpio_as_irq_fall_edge(GPIO_GROUP_A+22);//改成下降沿中断
-     }
+		__gpio_as_irq_fall_edge(GPIO_GROUP_A+22);	//改成下降沿中断
+	}
+}
+
+static void irtrigger_handle(unsigned int arg)
+{
+	__gpio_ack_irq(GPIO_GROUP_B + 1);
+
+	if (!__gpio_get_pin(GPIO_GROUP_B + 1))			//下降沿
+	{
+		__gpio_as_irq_rise_edge(GPIO_GROUP_B + 1);	//改成上升沿中断
+	}
+	else
+	{
+		__gpio_as_irq_fall_edge(GPIO_GROUP_B + 1);	//改成下降沿中断
+	}
 }
 
 static void wakeupKey_handle(unsigned int arg)
@@ -104,32 +118,45 @@ void init_gpio(void)
 
 	//wake up key 
 	__gpio_as_irq_fall_edge(GPIO_GROUP_B+31);
-	request_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_B+31), wakeupKey_handle, 0);  
-	
+	request_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_B+31), wakeupKey_handle, 0);
 
+	//IR Trigger
+	__gpio_as_input(GPIO_GROUP_B + 1);
+	request_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_B + 1), irtrigger_handle, 0);
+	//disable_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_A+22));
+	__gpio_as_irq_fall_edge(GPIO_GROUP_B + 1);//改成下降沿中断
 }
+
 void led_on(int nled)
 {
 //	if(nled & RED_LED) __gpio_clear_pin(GPIO_GROUP_B+22);
- 	if(nled & GREEN_LED) 
-        __gpio_clear_pin(GPIO_GROUP_B+22);
-    printf("on\n");
+  	if(nled & GREEN_LED) 
+         __gpio_clear_pin(GPIO_GROUP_B+22);
+
 }
 
 void led_off(int nled)
 {
- //	if(nled & RED_LED)  __gpio_set_pin(GPIO_GROUP_B+22);
- 	if(nled & GREEN_LED) 
-         __gpio_set_pin(GPIO_GROUP_B+22);
-    printf("off\n");
+//	if(nled & RED_LED)  __gpio_set_pin(GPIO_GROUP_B+22);
+  	if(nled & GREEN_LED) 
+          __gpio_set_pin(GPIO_GROUP_B+22);
+
 }
 
 int get_key_state(void)
-{
-	return __gpio_get_pin(GPIO_GROUP_A+22);
+{  
+//	return __gpio_get_pin(GPIO_GROUP_A + 22);
+
+	if ((__gpio_get_pin(GPIO_GROUP_A + 22) == 0) || (__gpio_get_pin(GPIO_GROUP_B + 1) == 0) )
+	{
+		return 0;
+	} 
+	else
+	{
+		return 1;
+	}
+
 }
-
-
 
 static unsigned long crc32_table[256];  // Lookup table array 
 static BOOL bCrc32Init = FALSE;

@@ -42,7 +42,8 @@ int GC0308_reg_read (unsigned int addr, unsigned int *buf)
      int ret;
     //int t1,t2;
     //t1=Get_PerformanceCounter()*10/15;
-	
+	 printf("GC0308\n");
+	 printf("addr:0x%02x\n", addr);
     ret = i2c_read(i2c_1, i2c_addr >> 1, (unsigned char*)buf, addr, 1);//一次读取两个字节数据
 
     //t2=Get_PerformanceCounter()*10/15;
@@ -256,8 +257,10 @@ void * GC0308_LightHandle(int mode)
 void GC0308_Info(CSINF *p)
 {
 	unsigned int data = 0;
+
 	if (!p) return;
 
+	printf("GC0308_InfoEnter\n");
 	GC0308_reg_read(0, &data);
 	if (data == 0x9b)
 	{
@@ -867,7 +870,7 @@ void GC0308_Init(void)
 
 #endif
 
-             {0xD3, 0x38},////////////////////////{0xD3, 0x74},//AEC_target_Y
+        {0xD3, 0x38},////////////////////////{0xD3, 0x74},//AEC_target_Y
 		{0xD5, 0xF2},
 		{0xD6, 0x16},
 		{0xDB, 0x92},
@@ -995,7 +998,7 @@ void GC0308_Init(void)
 	};
 	int nCnt = sizeof(nInit)/(sizeof(int)*2);
 	int i;
-
+	printf("GC0308 Initial\n");
 	for (i = 0; i < nCnt; i++)
 	{//初始化关键寄存器
         GC0308_reg_write(nInit[i][0], nInit[i][1]);       
@@ -1447,6 +1450,7 @@ void GC0308_Mirror(int mode)
 {
     	int data = 0;
       //unsigned char val[2];
+		printf("Mirror\n");
 	  if (GC0308_reg_read(0x14, &data) != 0)
 		  return;
       

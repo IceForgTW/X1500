@@ -1,0 +1,18 @@
+#ifndef __UART_H__
+#define __UART_H__
+#define TCSM_DELAY(x)						\
+	do{							\
+		register unsigned int i = x;			\
+		while(i--)					\
+			__asm__ volatile(".set mips32\n\t"	\
+					 "nop\n\t"		\
+					 ".set mips32");	\
+	}while(0)
+
+void serial_putc(char x);
+void serial_put_hex(unsigned int x);
+void serial_setid(int uart_id);
+char serial_getc (void);
+void serial_puts(const char *s);
+
+#endif	/* __UART_H__ */

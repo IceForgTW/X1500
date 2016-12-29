@@ -6,7 +6,13 @@
 #include "gc0308.h"
 #include "uartmc.h"
 #include <string.h>
-// #define CIM_DEBUG_TIME_ID	
+// #define CIM_DEBUG_TIME_ID
+
+//////////////tannyhjl////////////
+#undef printf
+#include <stdio.h>
+#include "uartmc.h"
+///////////////////////////////
 
 #define LIGHTFOCUS 0
 
@@ -921,7 +927,8 @@ void cim_task_entry(void *arg)
     u8 err;
     CmosBufNode* temp=NULL;
 	unsigned int n,ndata;
-          unsigned char buf[128]={'\0'};  
+    unsigned char buf[128]={'\0'}; 
+	printf("cim_task_entry\n");
     while(1)
     {       
         os_SemaphorePend(CIMWaitSem, 0, &err);//第2个参数是超时参数。0表示硬等，单位为10ms/tick
@@ -1037,7 +1044,9 @@ void CIM_init(void)
     CLKGR &= ~(1 << 23);//lcd clk gate，打开lcd时钟，cim时钟来自LCD
     CLKGR |= (1 << 22);//cim clk gate,关闭cim时钟
     CLKGR |= (1 << 21);//pdma clk gate，关闭dma时钟
-      
+
+	printf("CMI entry\r\n");
+
     gpio_as_output(CIM_PWR);
     gpio_set_pin(CIM_PWR);
     gpio_as_output(CIM_STANDBY);
@@ -1046,6 +1055,8 @@ void CIM_init(void)
     Light_Foc_Init();
 	
 	cmos_sensor_Hw_Reset();
+
+	printf("CMI 1\r\n");
 
     //cim接口脚复用功能配置
     PAINTC |= 0xFFF00;//PA脚不作为中断口使用
@@ -1065,7 +1076,7 @@ void CIM_init(void)
    	printf("mpll: %d, mclk: %d \n", cpm_get_xpllout(SCLK_MPLL), cpm_get_clock(CGU_CIMCLK));
  
     i2c_open(i2c_1, CMOS_I2C_CLK_DEFAULT);
-
+	printf("CIM_CNT\n");
     nCnt = sizeof(TSImgTypeOperate)/sizeof(TYCMOSOperate);
     for (i = 0; i < nCnt; i++)
     {

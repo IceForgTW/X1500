@@ -256,7 +256,6 @@ int QueryDownFlag(void)
 }
 
 
-
 static void TaskStart(void *data)
 {
 
@@ -273,7 +272,8 @@ static void TaskStart(void *data)
     /*for(i=0;i<7;i++)
         jz_nor_erase(0x40000+i*4096, 4096);*/
     // 	printf("\n\n newland MiniOS Kernel Start at %s\n", __TIME__);
-
+    
+    printf("TaskStart\n");
     //注册系统回调函数
     os_SetBspInterface(&x1000BspHook);
     
@@ -292,9 +292,10 @@ static void TaskStart(void *data)
     i2c_open(1, 400000);
     UartInit();
     //dnflag = QueryDownFlag();
-    
-    CIM_init();
+    printf("CIM_init\n");
+ //   CIM_init();
     Init_WatchDog();
+    printf("DataRoute\n");
     InitSendDataRouteTask();
     //HIDPOS_test();
     //uart_test();
@@ -303,14 +304,14 @@ static void TaskStart(void *data)
     //flash_test();
 
     //test_pi();
-	
+	printf("WAKE\n");
     Init_Wakeup_Timer();
-
+    printf("1\n");
     //PWM初始化
     pwm_init(TCU_TIMER_PWM0);
-
+    printf("2\n");
     Z_InitHardIntface((osINTFACE * )GetDecodeOSIntf());	
-
+    printf("3\n");
     Z_DogReset(Wacthdog_Timeout);//+Wacthdog_Timeout*33/100);
 
     //解密
@@ -320,7 +321,7 @@ static void TaskStart(void *data)
     rsa_cpuid_crc16 = crc_cal_by_bit(rsa_cpuid, 16);
     efuse_cpuid_crc16 = crc_cal_by_bit(efuse_cpuid, 16);
     dev_magic = rsa_cpuid_crc16 ^ efuse_cpuid_crc16;
-   
+    printf("4\n");
     /*for(i=0;i<16;i++)
     {
         printf("%x %x\n", rsa_cpuid[i], efuse_cpuid[i]);
@@ -328,8 +329,12 @@ static void TaskStart(void *data)
     printf("magic=%x %x %x\n",rsa_cpuid_crc16, efuse_cpuid_crc16, dev_magic);
     // init_gpio();
     */
+
     U_appDevicePowerOnBeep();
+    printf("5\n");
     U_appPowerOnDisplay(); 
+//	Y_commSendString("Main_UART.\r\n");
+	printf("6\n");
     
     while(1)
     {
@@ -351,7 +356,7 @@ unsigned short GetDevMagic(void)
 
 void Em3000_Main(void)
 {
-//     printf("Em3000_Main...\n");	
+    printf("Em3000_Main...\n");	
 	OS_TASK_STACK *ptos;
 	OS_TASK_STACK *pbos;
 	unsigned int  size;

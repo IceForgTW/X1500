@@ -93,7 +93,7 @@ void Idle(int mode)
 // 
 	REG_INTC_IMR(0) = 0xffffffff;
 	REG_INTC_IMR(1) = 0xffffffff;
-	REG_INTC_IMCR(0) = ((1<<17) | (1<<21));//port0
+	REG_INTC_IMCR(0) = ((1<<17) | (1<<21)|(1<<16));//port0 port1
 	REG_INTC_IMCR(1) = (1<<19);//uart0
 
 

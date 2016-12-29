@@ -300,7 +300,7 @@ int xfer_read_subaddr(int num, unsigned char *subaddr,int sublength, unsigned ch
 		printf("INTST = 0x%x, TXABRT = 0x%x\n", REG_I2C_INTST(num), REG_I2C_TXABRT(num));
 		__i2c_clear_interrupts(tmp,num);
 		ret = -3;
-		while(1);
+		while (1) ;
 		goto out;
 	}
 
@@ -404,6 +404,7 @@ void i2c_close(int num)
 int i2c_read(int num, unsigned char device, unsigned char *buf,
 	       unsigned char address, int count)
 {
+	printf("read no16\n");
 	return xfer_read_subaddr(num, &address, 1, device, buf, count);
 }
 

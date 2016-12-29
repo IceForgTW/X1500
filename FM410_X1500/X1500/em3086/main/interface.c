@@ -372,7 +372,6 @@ static int _s_comm_write(unsigned char * buff, unsigned int size)
 	entry_fun();
 	if (!commtype)
 		return 0;
-
 	switch(commtype)
 	{
 		case COMMT_RS232:		//RS232µÄ´®¿Ú
