@@ -1,12 +1,15 @@
 #include <os_api.h>
 #include "x1000.h"
 #include "cmos.h"
-//#include "mt9v022.h"
 #include <em3000_cfg.h>
-#include "gc0308.h"
+#include "ov9282.h"
 #include "uartmc.h"
-#include <string.h>
+#include <cache.h>
+#include <gpio.h>
+#include <time-tcu.h>
+
 // #define CIM_DEBUG_TIME_ID
+#include <string.h>
 
 //////////////tannyhjl////////////
 #undef printf
@@ -69,8 +72,6 @@ typedef struct _buf_node
     struct _buf_node* pNext;  
 }CmosBufNode;
 
-static int bufindex=0;
-
 typedef void (*LightCtrl)(int n);
 static LightCtrl _light_ctrl = NULL;
 
@@ -90,23 +91,23 @@ static volatile unsigned int nCapture =  CMOSCAPTURE_STOP;
 
 TYCMOSOperate	TSImgTypeOperate[] = {
 	{
-		T_CMOS_GC0308,
-		GC0308_Info,
-		GC0308_Init,
-		GC0308_Width,
-		GC0308_Height,
-		GC0308_Adjust,
-		GC0308_GetLux,
-		GC0308_Mirror,
-		GC0308_reg_read,
-		GC0308_reg_write,
-		GC0308_Width_For_CSI,
-		GC0308_Height_For_CSI,
-		GC0308_ImgData,
-		GC0308_Capture_Mode,
-		GC0308_Standby,
-		GC0308_Exposure_update,
-		GC0308_LightHandle
+		T_CMOS_OV9282,
+		OV9282_Info,
+		OV9282_Init,
+		OV9282_Width,
+		OV9282_Height,
+		OV9282_Adjust,
+		OV9282_GetLux,
+		OV9282_Mirror,
+		OV9282_reg_read,
+		OV9282_reg_write,
+		OV9282_Width_For_CSI,
+		OV9282_Height_For_CSI,
+		OV9282_ImgData,
+		OV9282_Capture_Mode,
+		OV9282_Standby,
+		OV9282_Exposure_update,
+		OV9282_LightHandle
 	},
 	{
 		T_CMOS_UNKNOW,
@@ -212,7 +213,6 @@ static int GetNodeCount(CmosBufNode* pNode)
 */
  static CmosBufNode * GetCmosbuf(CmosBufNode **pHead)
 {
-    unsigned int sr;
     CmosBufNode *p;
 
     if (*pHead == NULL)
@@ -242,7 +242,6 @@ static int GetNodeCount(CmosBufNode* pNode)
 */
 static void AddCmosBuf(CmosBufNode** pHead, CmosBufNode* pNode,  bool bAddSingleNode)  
 {  
-      unsigned int sr;
 	CmosBufNode* p = *pHead;  
 	CmosBufNode* pTem;
 	int n=0;
@@ -265,22 +264,7 @@ static void AddCmosBuf(CmosBufNode** pHead, CmosBufNode* pNode,  bool bAddSingle
 		
 		while(NULL != pTem)  
 		{  
-#if 0
-			if (n>CMOSBUFMAX)
-			{
-				p = *pHead;
-				for (n=0; n<CMOSBUFMAX; n++)
-				{
-					pTem = p->pNext;
-					p = pTem;
-					diag_printf("next: %x\n", p->pNext);
-
-				}
-				while(1);
-			}
-#endif
-
-			p = pTem;  
+    		p = pTem;  
 			pTem = p->pNext;  
 			n++;
 		}  
@@ -435,20 +419,8 @@ void focoff_timer_handle(void)
 
 void foc_on_delay(int us)
 {
-    unsigned int ndata[2];
-    unsigned int exp_time;
-      //timer_delay(3,30, focoff_timer_handle);
-      //udelay(500);
-	foc_on(TRUE);	
-      timer_delay(3,us, foc_timer_handle);
-
-/*      GC0308_reg_read(0x03, &ndata[0]);
-      GC0308_reg_read(0x04, &ndata[1]);
-      exp_time = ndata[0]&0xf<<8 | ndata[1];
-      if(exp_time > 536)
-        foc_on(TRUE);*/
-   // printf("on\n");
-	
+    foc_on(TRUE);	
+    timer_delay(3,us, foc_timer_handle);
 }
 
 
@@ -495,33 +467,26 @@ void Light_Foc_Init(void)
 
 }
 
-void ledout_isr(void)
+void ledout_isr(unsigned int param)
 {
- //printf("ledoutISR\r\n");
+    //printf("ledoutISR\r\n");
 	__gpio_ack_irq((GPIO_GROUP_B+21));//清中断标志
-//     disable_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_A+7));
 
 	if(!__gpio_get_pin(GPIO_GROUP_B+21))//下降沿
 	{
-//         led_off(1);
 		if (_light_ctrl)
 			_light_ctrl(FALSE);//非曝光
 		//printf("fall edge interrupt\r\n");
 
-
 		__gpio_as_irq_rise_edge(GPIO_GROUP_B+21);//改成上升沿中断
-		//         enable_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_A+7));  
      }
      else
      {
-// 		led_on(1);
 		if (_light_ctrl)
 			_light_ctrl(TRUE);//曝光
 		//printf("rise edge interrupt\r\n");
 
-
 		__gpio_as_irq_fall_edge(GPIO_GROUP_B+21);//改成下降沿中断
-		//          enable_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_A+7));  
      }
 }
 
@@ -539,8 +504,6 @@ static void ledout_init(void)
 
 static void vsync_handle(unsigned int arg)
 {
-    int ntime;
-    unsigned char bri;
     __gpio_ack_irq((GPIO_GROUP_A+21));
 
 
@@ -558,11 +521,6 @@ static void vsync_handle(unsigned int arg)
 		//printf("rise edge interrupt\r\n");
         __gpio_as_irq_fall_edge(GPIO_GROUP_A+21);
     }
-    
-    //ntime = nBF3005_Exp* 640/27;
-    //timer_delay(3, ntime, light_timer_handle);
-    //printf("exptime=%x\r\n",nBF3005_Exp);
-	
 	//printf("vsync interrupt\r\n");
 }
 
@@ -618,7 +576,7 @@ void illumination_interrupt_disable(void)
 
 unsigned char *ReadCmosBuf(unsigned int mode, unsigned int timeout)
 {
-	bool b;
+
 	unsigned int t1, t2;	
 	unsigned char *p;
 	CmosBufNode * pTemp;
@@ -715,7 +673,9 @@ void Set_CmosCaptureMode(int mode)
 // 	printf("\r\nCmosCaptureMode: %d\n", mode);
 
 	if (TSImgTypeOperate[CmosSensor].fnc_LightHandle != NULL)
-	{ _light_ctrl = (LightCtrl)TSImgTypeOperate[CmosSensor].fnc_LightHandle(mode); }	
+	{ 
+	    _light_ctrl = (LightCtrl)TSImgTypeOperate[CmosSensor].fnc_LightHandle(mode); 
+	}	
 
 
 	if (TSImgTypeOperate[CmosSensor].fnc_CaptureMode != NULL)
@@ -723,7 +683,6 @@ void Set_CmosCaptureMode(int mode)
 	
 }
 
-static int _MobileMode = 0;
 /*
 	0 - 普通模式（纸质码）；nls0321000
 	1 - 反光抑制；
@@ -781,8 +740,8 @@ void csi_capture(BOOL b, int mode)
 
 	if(b)//start capture
 	{
-	     /*#if GC0308_USE_AEC
-            GC0308_reg_write(0xD2, 0x90);    
+	     /*#if OV9282_USE_AEC
+            OV9282_reg_write(0xD2, 0x90);    
            #endif*/
            
 		switch(mode)
@@ -799,7 +758,7 @@ void csi_capture(BOOL b, int mode)
 				Set_CmosCaptureMode(CMOSCAPTURE_PRINT);
 				nCapture = CMOSCAPTURE_PRINT;
                          //mdelay(50);
-                         //GC0308_reg_write(0xd2, 0x90);
+                         //OV9282_reg_write(0xd2, 0x90);
 			}
 			else if (nCaptureMode == 2)
 			{
@@ -847,12 +806,8 @@ void csi_capture(BOOL b, int mode)
     else//stop capture
     {
 		nCapture = CMOSCAPTURE_STOP;
-		//GC0308_reg_write(0xD2, 0x00);  
 		illumination_interrupt_disable();
 
-		
-            //GC0308_reg_write(0xd2, 0x00);
-            //mdelay(50);
 		Set_CmosCaptureMode(CMOSCAPTURE_STOP);
         
 		light_on(FALSE);
@@ -869,13 +824,8 @@ void csi_capture(BOOL b, int mode)
 
 static void cim_irq_handler(unsigned int arg)
 {
-    unsigned char err;
 
     u32 state = REG_CIM_STATE(CIM_PORT);
-
-          
-
-
 
 // 	printf("\ncim: %x, id: %d, t:%ld\n", state, REG_CIM_IID(CIM_PORT), (Get_PerformanceCounter())/150-testT);
 
@@ -926,8 +876,8 @@ void cim_task_entry(void *arg)
 {
     u8 err;
     CmosBufNode* temp=NULL;
-	unsigned int n,ndata;
-    unsigned char buf[128]={'\0'}; 
+
+
 	printf("cim_task_entry\n");
     while(1)
     {       
@@ -977,46 +927,14 @@ void cim_task_entry(void *arg)
 		if (TSImgTypeOperate[CmosSensor].fnc_Adjust != NULL)
 		{
 			TSImgTypeOperate[CmosSensor].fnc_Adjust(nImg_want_lux, 
-				(unsigned char*)(temp->buffer), 
-				img_count, LIGHT_ON_COUNT, LIGHT_OFF_COUNT);
+				                                        (unsigned char*)(temp->buffer), 
+				                                        img_count, 
+				                                        LIGHT_ON_COUNT, 
+				                                        LIGHT_OFF_COUNT);
 		}
 
 		//printf( "i: %d, n: %d，complete: %d\r\n", img_count, REG_CIM_IID(CIM_PORT), GetNodeCount(pComplete));
-
 		img_count ++;
-
-	
-      //GC0308_reg_read(0x03, buf+1);
-
-      GC0308_reg_read(0x3, &ndata);
-      sprintf(buf,"%02x",ndata);
-     GC0308_reg_read(0x4, &ndata);
-      sprintf(buf+strlen(buf),"%02x, ",ndata);
-      GC0308_reg_read(0xd2, &ndata);
-      sprintf(buf+strlen(buf),"%02x, ",ndata);
-     GC0308_reg_read(0xe4, &ndata);
-      sprintf(buf+strlen(buf),"%02x",ndata);
-      GC0308_reg_read(0xe5, &ndata);
-      sprintf(buf+strlen(buf),"%02x, ",ndata);
-      GC0308_reg_read(0xe6, &ndata);
-      sprintf(buf+strlen(buf),"%02x",ndata);
-      GC0308_reg_read(0xe7, &ndata);
-      sprintf(buf+strlen(buf),"%02x, ",ndata);
-      GC0308_reg_read(0xe8, &ndata);
-      sprintf(buf+strlen(buf),"%02x",ndata);
-      GC0308_reg_read(0xe9, &ndata);
-      sprintf(buf+strlen(buf),"%02x, ",ndata);
-      GC0308_reg_read(0xea, &ndata);
-      sprintf(buf+strlen(buf),"%02x",ndata);
-      GC0308_reg_read(0xeb, &ndata);
-      sprintf(buf+strlen(buf),"%02x",ndata);
-      sprintf(buf+strlen(buf),"\r\n",ndata);
-     comm_write(buf, strlen(buf));
-
-
-
-      
-     
    
 // 		n = (Get_PerformanceCounter() - tEOF)*10/15;
 // 		printf("\r\ntask: %d \r\n", n);
@@ -1025,16 +943,6 @@ void cim_task_entry(void *arg)
 }
 
 
-
-int cmos_sensor_Hw_Reset(void)
-{   
-    __gpio_clear_pin(CIM_RST);
-    mdelay(2);
-    __gpio_set_pin(CIM_RST);
-    mdelay(2);
-	
-    return 0;
-}
 
 void CIM_init(void)
 {
@@ -1049,13 +957,10 @@ void CIM_init(void)
 
     gpio_as_output(CIM_PWR);
     gpio_set_pin(CIM_PWR);
-    gpio_as_output(CIM_STANDBY);
     gpio_as_output(CIM_RST);
-    gpio_clear_pin(CIM_STANDBY);
+    gpio_set_pin(CIM_RST);
     Light_Foc_Init();
 	
-	cmos_sensor_Hw_Reset();
-
 	printf("CMI 1\r\n");
 
     //cim接口脚复用功能配置
@@ -1075,7 +980,7 @@ void CIM_init(void)
 
    	printf("mpll: %d, mclk: %d \n", cpm_get_xpllout(SCLK_MPLL), cpm_get_clock(CGU_CIMCLK));
  
-    i2c_open(i2c_1, CMOS_I2C_CLK_DEFAULT);
+    //i2c_open(i2c_1, CMOS_I2C_CLK_DEFAULT);
 	printf("CIM_CNT\n");
     nCnt = sizeof(TSImgTypeOperate)/sizeof(TYCMOSOperate);
     for (i = 0; i < nCnt; i++)
@@ -1105,6 +1010,7 @@ void CIM_init(void)
 		return;
 	}
 
+#if 0
 	if (cmosInfo.nInputClk != DEFAULT_MCLK)
 	{
 		CIMCDR = 0xA0000000;
@@ -1121,7 +1027,7 @@ void CIM_init(void)
 		i2c_open(i2c_1, cmosInfo.nI2cClk);
 		printf("i2c clock: %d\r\n", cmosInfo.nI2cClk);
 	}
-
+#endif
     if (TSImgTypeOperate[CmosSensor].fnc_Init != NULL)
     {
         //printf("MT9V022 REG INIT!\r\n");
@@ -1221,23 +1127,5 @@ void CmosStandby(BOOL bStandby)
 		}	
 	}
 	
-}
-
-unsigned char* YUV422toMonochrome(unsigned char *pSrc, int nSize)
-{
-	int i, k;
-	unsigned char *p = pSrc;
-
-	if (pSrc == NULL)
-		return NULL;
-
-	k = 0;
-
-	for (i=0; i<nSize; i+=2)
-	{
-		p[k++] = pSrc[i];
-	}
-
-	return p;
 }
 

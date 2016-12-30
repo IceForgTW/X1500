@@ -3,7 +3,7 @@
 #SOURCES	+= $(CAMERADIR)/camera.c \
 
 SOURCES 	+= 	$(CAMERADIR)/cmos.c \
-	$(CAMERADIR)/gc0308.c
+	$(CAMERADIR)/ov9282.c
 	
 #SOURCES	+= $(CAMERADIR)/test/cameratest.c \
 #	$(CAMERADIR)/test/preview.c 

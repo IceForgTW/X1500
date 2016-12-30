@@ -87,6 +87,7 @@ typedef struct _NCR_TRICKLE{
 #define T_CMOS_AR0134		0x07
 #define T_CMOS_BF3005		0x08
 #define T_CMOS_GC0308		0x09
+#define T_CMOS_OV9282       0x0A
 
 
 //有关通讯接口的类型的定义

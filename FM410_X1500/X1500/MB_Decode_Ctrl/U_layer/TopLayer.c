@@ -2376,18 +2376,16 @@ UTImgParam * U_appChkToReadAndCapture(BOOL FirstFlag, int nDevMode)
 	capture_count++;
 
 	//ÅÄÍ¼	
- 	Y_commSendString("Went to read.\r\n");
+ //	Y_commSendString("Went to read.\r\n");
 	if(FirstFlag)
 	{
 		bCaptureRun = TRUE;
 
 // 		Z_SetLightOnDuration(exposure_line);
 
-
 // 		SetExprosureMode();
 			
 // 		Z_SetPM_EX(FREQ_416);
-
 
 //		Y_commSendString("First to read img.\r\n");
 

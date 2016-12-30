@@ -414,7 +414,7 @@ int i2c_write(int num, unsigned char device_addr, unsigned char *buf,
 	return xfer_write_subaddr(num, &address, 1, device_addr, buf, count);
 }
 
-int i2c_read_16(int num, unsigned char device, unsigned char *buf,
+int i2c_read16(int num, unsigned char device, unsigned char *buf,
 	       unsigned short address, int count)
 {
 	unsigned char addr_buf[2];
@@ -423,7 +423,7 @@ int i2c_read_16(int num, unsigned char device, unsigned char *buf,
 	addr_buf[1] = (unsigned char)(address & 0xff);
 	return xfer_read_subaddr(num, addr_buf, 2, device, buf, count);
 }
-int i2c_write_16(int num, unsigned char device, unsigned char *buf,
+int i2c_write16(int num, unsigned char device, unsigned char *buf,
 		unsigned short address, int count)
 {
 	unsigned char addr_buf[2];

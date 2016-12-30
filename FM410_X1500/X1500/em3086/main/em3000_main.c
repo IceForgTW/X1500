@@ -293,7 +293,7 @@ static void TaskStart(void *data)
     UartInit();
     //dnflag = QueryDownFlag();
     printf("CIM_init\n");
- //   CIM_init();
+    CIM_init();
     Init_WatchDog();
     printf("DataRoute\n");
     InitSendDataRouteTask();
