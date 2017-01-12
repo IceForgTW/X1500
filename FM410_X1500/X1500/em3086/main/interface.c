@@ -55,7 +55,7 @@ extern void Idle(int mode);
 extern void Standby(void);
 extern void DeepSleep(void);
 extern void USBSuspend(void);
-extern void _is_Set_KBW_restore(int nformat);
+extern void _is_Set_KBW_restore(int nformat); 
 extern void Set_KBW_Character_Encoding(int nMode);
 extern void _is_Decoding(int nFlag);
 extern unsigned short GetDevMagic(void);

@@ -7,7 +7,7 @@
 /************************************************************************/
 /*                                                                      */
 /************************************************************************/
-
+#define FM410_CAPTURE_ENABLE 0
 //定义可订制的对焦灯照明灯信号信息键值
 #define FL_EXTCYC_NO_READ  0x30001  //大循环未进入读码循环时
 #define FL_PRE_GET_CMOS    0x30002  //CMOS图像获取之前
@@ -79,7 +79,7 @@ void	U_appBackFromUsbSuspend(void)
 	Y_cmosInit();
 	//重设为镜像
 	uJ_HardTypeParam();
-	//  	U_appBKGrndProc();	
+	//U_appBKGrndProc();	
 }//End of function;
 
 BOOL U_GetScanEnable(void)
@@ -122,9 +122,9 @@ void	U_appBKGrndProc(void)
 	if (X_paramIsAllParamInited() != TRUE)
 	{//初始化
 	//printf("g_n addr=%x\n",&g_nIdleStTick);
-	     bPowerStart = TRUE;
-            nTick = Z_Get10msCounter();
-	      Z_TransferIdleTickVar(&g_nIdleStTick);
+	    bPowerStart = TRUE;
+        nTick = Z_Get10msCounter();
+	    Z_TransferIdleTickVar(&g_nIdleStTick);
 		X_paramInitedAllParam();
 		X_decoSet2DParam(X_paramGetGlobalAllParam()->p2D);
 		X_decoSet1DParam(X_paramGetGlobalAllParam()->p1D);
@@ -2367,18 +2367,32 @@ UTImgParam * U_appChkToReadAndCapture(BOOL FirstFlag, int nDevMode)
 		bInited = TRUE;
 	}//End of if;
 
-	if(FirstFlag)
+	if (FirstFlag)
+	{
+#if FM410_CAPTURE_ENABLE
+		Y_commSendString("FL_EXTCYC\r\n");
+#endif
 		T_LightFocusCtrl(FL_EXTCYC_NO_READ);
+	}
 
-	if(!IsModeToReadCode())		//判断是否可以读码
+	if (!IsModeToReadCode())		//判断是否可以读码
+	{
 		return NULL;
+	}
 
 	capture_count++;
 
-	//拍图	
- //	Y_commSendString("Went to read.\r\n");
+	//拍图
+#if FM410_CAPTURE_ENABLE
+	Y_commSendString("Went to read.\r\n");
+#endif
+ 	
 	if(FirstFlag)
 	{
+
+#if FM410_CAPTURE_ENABLE
+		Y_commSendString("FirstFlag\r\n");
+#endif
 		bCaptureRun = TRUE;
 
 // 		Z_SetLightOnDuration(exposure_line);
@@ -2393,13 +2407,11 @@ UTImgParam * U_appChkToReadAndCapture(BOOL FirstFlag, int nDevMode)
 
 	}
 
-//		Y_commSendString("Wait to read img.\r\n");
+//	Y_commSendString("Wait to read img.\r\n");
 
-		Y_cmosCapture_Ex(CAPTURE_WAIT, READ_SCANNING);		//不启动拍图，但等待拍图结束
+	Y_cmosCapture_Ex(CAPTURE_WAIT, READ_SCANNING);		//不启动拍图，但等待拍图结束
 
-
-//	Y_commSendString("Capture end.\r\n");
-
+	Y_commSendString("Capture end.\r\n");
 
 	_s_Img.pSrc = (BYTE*)Y_cmosGetDataAddr();
 
@@ -2446,7 +2458,6 @@ void U_appAfterDecodeProc(int nFlag, int nMode, int nDevMode)
 
 	bCaptureRun = FALSE;
 
-
 // 	Y_commSendString("quit 1\r\n");
 	if(!nFlag)		//解码失败
 		T_LightFocusCtrl(FL_SITH_DECODER);
@@ -2460,7 +2471,7 @@ void U_appAfterDecodeProc(int nFlag, int nMode, int nDevMode)
 
 	if (psParam->pDFormat->DFEnable) //如果Data Format开启 则要对数据进行Dataformating编辑
 	{
-	      if (Y_commGetCurType() == COMMT_KBW)//kbw通讯模式,且dataformat使能,将标志传递给底层,dataformat库出来的数据在底层合并并恢复
+	    if (Y_commGetCurType() == COMMT_KBW)//kbw通讯模式,且dataformat使能,将标志传递给底层,dataformat库出来的数据在底层合并并恢复
 		{
 			Z_isSetKBWrestore(1);
 		}
@@ -2538,14 +2549,14 @@ void U_appAfterDecodeProc(int nFlag, int nMode, int nDevMode)
 
 
 	SaveGoodDecodeImg((BYTE*)Y_cmosGetDataAddr(), Y_cmosGetHeight()*Y_cmosGetWidth());
-
+	printf("led_enter\r\n");
 // 	if (X_paramGetGlobalAllParam()->pCode->nReadMode != ESC3)	//非连续识读模式时，需要提示
 	if ((X_paramGetGlobalAllParam()->pHard->nGoodreadLED & 1) == 0)
 	{
 		U_appBKGrndProc();
+		printf("led_green\r\n");
 		Z_LedOn(LED_GREEN);
 
-    
 		if(X_paramGetGlobalAllParam()->pHard->nGoodreadLEDDuration == 4)
 		{
 			ndelay = X_paramGetGlobalAllParam()->pCode2->nSucLedDuration;
@@ -2593,7 +2604,7 @@ BOOL U_appProcDecodeEx(int nMode)
 
 	do 
 	{
-		if(CheckAndRunIdle())	//检测是否进入Idle模式，退出Idle模式则会返回
+		if(CheckAndRunIdle())		//检测是否进入Idle模式，退出Idle模式则会返回
 			return FALSE;
 		if(CheckAndRunStandby())	//检测是否进入standby模式，退出standby模式则会返回
 			return FALSE;
@@ -2604,19 +2615,36 @@ BOOL U_appProcDecodeEx(int nMode)
 
 		if(!sImg) 
 		{
+#if FM410_CAPTURE_ENABLE
+			Y_commSendString("sImg no null\r\n");
+#endif
 			if (bFirst == TRUE)
+			{
+#if FM410_CAPTURE_ENABLE
+				Y_commSendString("bFirst False\r\n");
+#endif
 				return FALSE;
+			}
 			else
+			{
+#if FM410_CAPTURE_ENABLE
+				Y_commSendString("break1\r\n");
+#endif
 				break;
+			}
 		}
 		else if (sImg->pSrc == NULL)
+		{
+#if FM410_CAPTURE_ENABLE
+			Y_commSendString("break2\r\n");
+#endif
 			break;
+		}
 
 		bFirst = FALSE;
 
 		nInfoFlag = U_appDecodeWithMacro();
 		
-
 	} while(nInfoFlag == FALSE);
 
 	U_appAfterDecodeProc(nInfoFlag, nMode, 0);

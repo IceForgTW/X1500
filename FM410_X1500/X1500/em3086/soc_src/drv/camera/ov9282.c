@@ -10,6 +10,7 @@
 
 // pclk 104MHz
 
+#define OV9282_DBG_ENABLE   0
 #define OV9282_NO_GAIN		0
 
 /* Maximum exposure time is frame length - 12 row periods,where frame length is set by registers {0x380E,0x380F}( 0x482-0xc) 
@@ -66,8 +67,11 @@ int OV9282_reg_read (unsigned int addr, unsigned int *buf)
 
     //t2=Get_PerformanceCounter()*10/15;
     //printf("rt1=%d, rt2=%d\n",t1,t2);
-    if (ret != 0)
+#if OV9282_DBG_ENABLE
+	if (ret != 0)
 		printf("i2c read error: %d\r\n", ret);
+#endif
+    
 
 	return ret;
 }
@@ -81,8 +85,10 @@ int OV9282_reg_write(unsigned int addr, unsigned int data)
     ret = i2c_write16(i2c_1, OV9282_slave_addr >> 1, (unsigned char *)&data, addr, 1);
     //t2=Get_PerformanceCounter()*10/15;
     //printf("w=%d\n",t2-t1);
+#if OV9282_DBG_ENABLE
 	if (ret !=0)
 		printf("i2c write error: %d\r\n", ret);
+#endif
 
 // 	printf("i2c write: %02x, %d\r\n", addr, data);
 
@@ -113,7 +119,10 @@ BOOL IsOV9282(void)
 	OV9282_reg_read(OV9282_ID_REG+1, &data_high);
 
 	chip_id = ((data_high<<8) | data_low);
+
+#if OV9282_DBG_ENABLE
 	printf("chip id=%x %x %x\n",chip_id, data_high, data_low);
+#endif
 	if(chip_id == 0x8192)
 		return TRUE;
 	return FALSE;
@@ -123,7 +132,10 @@ void OV9282_Info(CSINF *p)
 {
 	if (!p) return;
 
+#if OV9282_DBG_ENABLE
 	printf("OV9282_InfoEnter\n");
+#endif
+	
 
 	if (IsOV9282())
 	{
@@ -153,7 +165,9 @@ void OV9282_snapshot_init(void)
 //0 - Í£Ö¹ÅÄÍ¼£» 1 - Æô¶¯ÅÄÍ¼-Ö½ÖÊ£»2 - Æô¶¯ÅÄÍ¼-Ö½ÖÊÓëÆÁÄ»£»3 - Õì²â×´Ì¬£»
 void OV9282_Capture_Mode(int mode)
 {
+#if OV9282_DBG_ENABLE
      printf("Capture mode: %d, old: %d\n", mode, nOV9282CaptureMode);
+#endif
 	if (nOV9282CaptureMode == mode)
 		return;
 
@@ -188,8 +202,10 @@ void OV9282_Capture_Mode(int mode)
 
 		OV9282_set_exp(nOv9282_Exp); 	
 		OV9282_set_gain(nOv9282_Gain); 	
-
- 		printf("B0  e: %x, g:%x===\r\n", nOv9282_Exp, nOv9282_Gain);
+#if OV9282_DBG_ENABLE
+		printf("B0  e: %x, g:%x===\r\n", nOv9282_Exp, nOv9282_Gain);
+#endif
+ 		
 		break;
 
 	case 2:	//Æô¶¯ÅÄÍ¼-Ö½ÖÊÓëÆÁÄ»
@@ -218,7 +234,7 @@ void OV9282_Capture_Mode(int mode)
 			nOv9282_Gain_A = nOv9282_Gain;		
 		}
 
-		OV9282_set_exp(OV9282_MAXEXPOSUE_A); 	
+		OV9282_set_exp(OV9282_MAXEXPOSUE_A);
 		OV9282_set_gain(OV9282_INITAG); 
 
 		break;
@@ -547,7 +563,10 @@ void OV9282_Adjust(int nWantLux, unsigned char* pImgData, unsigned int nCount, u
 	unsigned int *pExp=NULL, *pGain=NULL;
 
 	curLux = OV9282_GetLux(pImgData);
+
+#if OV9282_DBG_ENABLE
     printf("wantlux%d curlux:%d  nCount=%d\n ", nWantLux, curLux, nCount);
+#endif
 
     //return;
 	if (nOV9282CaptureMode == 1)

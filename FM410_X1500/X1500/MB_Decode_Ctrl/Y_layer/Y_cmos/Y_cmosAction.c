@@ -18,7 +18,7 @@
 /************************************************************************/
 /* 类型定义                                                             */
 /************************************************************************/
-
+#define _FM410_DBG_ENABLE_ 1
 
 /************************************************************************/
 /* 全局标志量                                                           */
@@ -67,8 +67,10 @@ void Y_cmosCapture_Ex(int Xmode, int Ymode)
 	if (_Img_Capture_Inited != 0)
 	{
 		if (Xmode == CAPTURE_START)
-		{//启动拍图，并等待拍图结束		
-			
+		{//启动拍图，并等待拍图结束
+#if _FM410_DBG_ENABLE_
+			Y_commSendString("CAP_ST0\r\n");
+#endif
 			if (cap_stop == FALSE)	//采集结束前不能再次启动采集
 			{
 // 				Y_commSendString("capture start err: start\r\n");
@@ -76,14 +78,23 @@ void Y_cmosCapture_Ex(int Xmode, int Ymode)
 			}
 
 			Z_CmosCapture(TRUE, Ymode);
-
+#if _FM410_DBG_ENABLE_
+			Y_commSendString("CAP_ST1\r\n");
+#endif
 			cap_stop = FALSE;
 		}
 		else if (Xmode == CAPTURE_WAIT)
 		{//不启动拍图，但等待拍图结束
-			if (cap_stop == TRUE)	
+			if (cap_stop == TRUE)
+			{
+#if _FM410_DBG_ENABLE_
+				Y_commSendString("CAP_wait0\r\n");
+#endif
 				return;
-
+			}
+#if _FM410_DBG_ENABLE_
+			Y_commSendString("CAP_wait1\r\n");
+#endif
 			Z_GetCmosBuf(CMOSGetNewPic, 500);
 		}
 		else if (Xmode == CAPTURE_STOP)
@@ -128,8 +139,6 @@ void Y_cmosCapture(void)
 	Y_cmosCapture_Ex(CAPTURE_ONCE_AND_STOP, READ_DETECETING);		//启动拍图，并等待拍图结束
 
 }//End of function;
-
-
 
 
 //3.调整预期亮度

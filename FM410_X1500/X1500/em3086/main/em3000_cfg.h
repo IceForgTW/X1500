@@ -16,14 +16,14 @@
 #define TASK_MAIN_STK_SIZE      1024*128 
 #define TASK_KEY_STK_SIZE       1024
 #define TASK_DWC_STK_SIZE       1024 * 2   
-#define TASK_PWM_STK_SIZE 	  0x1000
+#define TASK_PWM_STK_SIZE 	    0x1000
 
 /* 设备使用的硬件定时器列表 */
 #define TCU_TIMER_PWM0         0       // PWM使用
-#define TCU_TIMER_WAKEUP	     1       // 定时唤醒使用
-#define TCU_TIMER_2            2        // 未使用
-#define TCU_TIMER_LIGHT        3        // 补光灯使用
-#define TCU_TIMER_LED        4        // LED
+#define TCU_TIMER_WAKEUP	   1       // 定时唤醒使用
+#define TCU_TIMER_2            2       // 未使用
+#define TCU_TIMER_LIGHT        3       // 补光灯使用
+#define TCU_TIMER_LED          4       // LED
 
 #define ENCRTION_TEXT_ADD   0x20000
 #define PUBLIC_KEYS_ADD     0x21000

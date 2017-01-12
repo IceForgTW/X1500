@@ -13,11 +13,11 @@ int get_bsp_ver(void)
 	{
 		int lvi = 0;
 
-            __gpio_as_input(32*0 + 9);
-            __gpio_as_input(32*0 + 10);
-            __gpio_as_input(32*1 + 0);
+		__gpio_as_input(32 * 0 + 9);
+		__gpio_as_input(32 * 0 + 10);
+		__gpio_as_input(32 * 1 + 0);
 
-            lvi = __gpio_get_pin(GPIO_GROUP_A+10);
+		lvi = __gpio_get_pin(GPIO_GROUP_A + 10);
 // 		pxa_gpio_mode(GPIO_IN | 80);
 // 		pxa_gpio_mode(GPIO_IN | 109);
 // 		pxa_gpio_mode(GPIO_IN | 110);
@@ -31,14 +31,16 @@ int get_bsp_ver(void)
 		{
 		case 0x03:
  			_sver = BSP_HR21_V1;
-            printf("t1\n");
 			break;
  		case 0x07:
  			_sver =  BSP_EM3086_V1;
-			printf("t2\n");
  			break;
+			
+		case 0x00:
+			_sver = BSP_FM410_V1;
+			break;
+			
         case 0x05:
-			printf("t3\n");
 			break;
 // 		case 0x08:
 // 			_sver = BSP_MB2033_V1;
@@ -64,6 +66,7 @@ char *get_bsp_string(void)
 	{
 	    case BSP_EM3086_V1:	return "EM3086";
         case BSP_HR21_V1:   return "HR21";
+        case BSP_FM410_V1:  return "FM410";
 	    case BSP_UNKNOW:	return "Unknow bsp ver";
 	}
 	return "Unknow bsp ver";
@@ -104,11 +107,14 @@ static void wakeupKey_handle(unsigned int arg)
 
 void init_gpio(void)
 {
+	//foc PA05
+ 	__gpio_as_output1(GPIO_GROUP_A + 5);
+
+	//light PC24
+ 	__gpio_as_output1(GPIO_GROUP_C + 24);
+
 	//LED
-	__gpio_as_output(GPIO_GROUP_B+22);
-// 	__gpio_disable_pull(GPIO_GROUP_C+21);
-	__gpio_set_pin(GPIO_GROUP_B+22);
-// 	__gpio_set_pin(GPIO_GROUP_C+21);
+	__gpio_as_output0(GPIO_GROUP_B+22);
 
 	//KEY
 	__gpio_as_input(GPIO_GROUP_A+22);
@@ -121,33 +127,36 @@ void init_gpio(void)
 	request_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_B+31), wakeupKey_handle, 0);
 
 	//IR Trigger
-	__gpio_as_input(GPIO_GROUP_B + 1);
+	__gpio_as_input(GPIO_GROUP_B+1);
+	
 	request_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_B + 1), irtrigger_handle, 0);
-	//disable_irq(EIRQ_GPIO_BASE + (GPIO_GROUP_A+22));
-	__gpio_as_irq_fall_edge(GPIO_GROUP_B + 1);//改成下降沿中断
+	__gpio_as_irq_fall_edge(GPIO_GROUP_B + 1);
+	
 }
 
 void led_on(int nled)
 {
 //	if(nled & RED_LED) __gpio_clear_pin(GPIO_GROUP_B+22);
-  	if(nled & GREEN_LED) 
-         __gpio_clear_pin(GPIO_GROUP_B+22);
-
+	if (nled & GREEN_LED)
+	{
+		__gpio_set_pin(GPIO_GROUP_B + 22);
+	}
+ 
 }
 
 void led_off(int nled)
 {
 //	if(nled & RED_LED)  __gpio_set_pin(GPIO_GROUP_B+22);
-  	if(nled & GREEN_LED) 
-          __gpio_set_pin(GPIO_GROUP_B+22);
-
+	if (nled & GREEN_LED)
+	{
+		__gpio_clear_pin(GPIO_GROUP_B + 22);		//解码成功指示灯
+	}
 }
 
 int get_key_state(void)
-{  
-//	return __gpio_get_pin(GPIO_GROUP_A + 22);
-
-	if ((__gpio_get_pin(GPIO_GROUP_A + 22) == 0) || (__gpio_get_pin(GPIO_GROUP_B + 1) == 0) )
+{
+//	return __gpio_get_pin(GPIO_GROUP_A+22);
+	if ((__gpio_get_pin(GPIO_GROUP_A + 22) == 0) || (__gpio_get_pin(GPIO_GROUP_B + 1) == 0))
 	{
 		return 0;
 	} 
@@ -155,7 +164,6 @@ int get_key_state(void)
 	{
 		return 1;
 	}
-
 }
 
 static unsigned long crc32_table[256];  // Lookup table array 
@@ -184,7 +192,7 @@ void Init_CRC32_Table(void)
 	// Call this function only once to initialize the CRC table. 
 	
 	// This is the official polynomial used by CRC-32 
-	// in PKZip, WinZip and Ethernet. 
+	// in PKZip, WinZip and Ethernet.
 	unsigned long ulPolynomial = 0x04c11db7; 
 	
 	// 256 values representing ASCII character codes. 
@@ -304,7 +312,6 @@ void SetPowerFrequency(int nFreqMode, BOOL bVoltage)
 	default:
 		return;
 	}
-
 
 	if (bVoltage)
 	{

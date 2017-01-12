@@ -42,9 +42,11 @@
 
 
 
-#define BSP_UNKNOW		0x00
-#define BSP_EM3086_V1		0x01
-#define BSP_HR21_V1              0x02
+#define BSP_UNKNOW		    0xff
+#define BSP_EM3086_V1       0x01
+#define BSP_HR21_V1         0x02
+#define BSP_FM410_V1        0x03
+
 
 #define TIMEOUT_NOWAIT		0xffffffff
 #define TIMEOUT_INFINITE	0

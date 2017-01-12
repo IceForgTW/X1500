@@ -460,16 +460,17 @@ void light_on_delay(int us)
 
 void Light_Foc_Init(void)
 {
-    __gpio_as_output(CIM_LIGHT);
-    __gpio_as_output(CIM_FOC);
+	
+	__gpio_as_output1(CIM_LIGHT);
+	__gpio_as_output1(CIM_FOC);
+	
     light_on(FALSE);
     foc_on(FALSE);
-
 }
 
 void ledout_isr(unsigned int param)
 {
-    //printf("ledoutISR\r\n");
+    printf("ledoutISR\r\n");
 	__gpio_ack_irq((GPIO_GROUP_B+21));//清中断标志
 
 	if(!__gpio_get_pin(GPIO_GROUP_B+21))//下降沿
@@ -757,8 +758,8 @@ void csi_capture(BOOL b, int mode)
 			{
 				Set_CmosCaptureMode(CMOSCAPTURE_PRINT);
 				nCapture = CMOSCAPTURE_PRINT;
-                         //mdelay(50);
-                         //OV9282_reg_write(0xd2, 0x90);
+                //mdelay(50);
+                //OV9282_reg_write(0xd2, 0x90);
 			}
 			else if (nCaptureMode == 2)
 			{
@@ -959,9 +960,11 @@ void CIM_init(void)
     gpio_set_pin(CIM_PWR);
     gpio_as_output(CIM_RST);
     gpio_set_pin(CIM_RST);
+
     Light_Foc_Init();
 	
 	printf("CMI 1\r\n");
+
 
     //cim接口脚复用功能配置
     PAINTC |= 0xFFF00;//PA脚不作为中断口使用

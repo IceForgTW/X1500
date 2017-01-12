@@ -472,17 +472,18 @@ void spl_main(void)
 	void (*xboot)(void);
 
 	//照明灯、对焦灯的控制管脚上电默认为高电平，灯亮，需初始化关灯
-	__gpio_as_output(32*0+5);
-	__gpio_set_pin(32*0+5);
-	__gpio_as_output(32*2+24);
-	__gpio_set_pin(32*2+24);
-      __gpio_as_output(32*1+22);
-	__gpio_set_pin(32*1+22);
-
+	__gpio_as_output1(32 * 0 + 5);
+//	__gpio_set_pin(32*0+5);
+	
+	__gpio_as_output1(32 * 2 + 24);
+//	__gpio_set_pin(32*2+24);
+	
+	__gpio_as_output1(32 * 1 + 22);
+//	__gpio_set_pin(32*1+22);
 
 	// This function can avoid UART floating, but should not call if UART will be in high frequency.
 	serial_init();
-// 	serial_puts("\nSerial is ok...\n");
+ // serial_puts("\nSerial is ok...\n");
 
 	pll_init();
 	sdram_init();

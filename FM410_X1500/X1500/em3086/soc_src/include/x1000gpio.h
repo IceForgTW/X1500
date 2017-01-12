@@ -384,7 +384,7 @@
 //----------------------------------------------------------------
 // Function Pins Mode
 #define __gpio_as_func0(n)			\
-	do {						\
+	do {							\
 		unsigned int p, o;			\
 		p = (n) / 32;				\
 		o = (n) % 32;				\
@@ -888,15 +888,15 @@
 	} while (0)
 
 #define __gpio_mask_irq(n)			\
-	do {						\
+	do {							\
 		unsigned int p, o;			\
 		p = (n) / 32;				\
 		o = (n) % 32;				\
 		REG_GPIO_PXMASKS(p) = (1 << o);		\
 	} while (0)
 
-#define __gpio_unmask_irq(n)			\
-	do {						\
+#define __gpio_unmask_irq(n)		\
+	do {							\
 		unsigned int p, o;			\
 		p = (n) / 32;				\
 		o = (n) % 32;				\
@@ -946,9 +946,9 @@ typedef enum
 {
 	GITT_L_LEVEL = 0x00,
 	GITT_H_LEVEL = 0x01,
-	GITT_F_EDGE = 0x02,
-	GITT_R_EDGE = 0x03,
-	GITT_MAX = 0x04,		// Just a value of the boundary
+	GITT_F_EDGE  = 0x02,
+	GITT_R_EDGE  = 0x03,
+	GITT_MAX     = 0x04,		// Just a value of the boundary
 }GPIO_INTR_TRIGGER_TYPE;
 
 #endif /* __MIPS_ASSEMBLER */

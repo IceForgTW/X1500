@@ -128,8 +128,6 @@ void JZ_StartTicker(unsigned int TicksPerSec)
 	OUTREG32(OST_OSTFR,0);
 	OUTREG32(OST_OST1DFR,0);
 
-
-
 	OUTREG32(OST_OSTCCR,get_ost_div(OST_TICKS_DIV));
 	
 	match_counter = OSC_CLOCK / OST_TICKS_DIV / TicksPerSec;
@@ -144,8 +142,6 @@ void JZ_StartTicker(unsigned int TicksPerSec)
 		printf("REG32(OST_OST1DFR = 0x%x\n",REG32(OST_OST1DFR));
 		if(REG32(OST_OSTFR))
 			REG32(OST_OSTFR) = 0;
-
-		
 	}
 }
 
@@ -256,13 +252,10 @@ static void pwm_set_fre(unsigned int chn, unsigned int frequence, unsigned int m
 	OUTREG16(TCU_TCNT(chn), 0x0000);
 
 	OUTREG32(TCU_TMSR, TMCR_HMASK(chn) |TMCR_FMASK(chn));
-	SETREG32((TCU_TCSR(chn)), (mode & 0x3) << 8);
+	SETREG32((TCU_TCSR(chn)), (mode & 0x02) << 8); //select the initial output level as low for pwm output in FM410
 	SETREG32((TCU_TCSR(chn)), TCSR_PWM_EN);
 
-
 }
-
-
 
 typedef void (*TimerHandler)(void);
 TimerHandler thandler[8]= {NULL,};
@@ -270,16 +263,14 @@ TimerHandler thandler[8]= {NULL,};
 static void timer_handler(unsigned int chn)
 {
 	// half 中断即使屏蔽 也是会产生
-_b_set_LedDur ++;
-    
-        OUTREG16(TCU_TECR, TECR_TIMER(chn));
+	_b_set_LedDur ++;
+	OUTREG16(TCU_TECR, TECR_TIMER(chn));
 	if (REG32(TCU_TFR) & TFR_FFLAG(chn))
 	{
 		if (thandler[chn])
-				thandler[chn]();
+			thandler[chn]();
 	}
 	OUTREG32(TCU_TFCR, (1<<chn) | (1<<(chn+16)));
-
 }
 
 //20us - 500ms 定时器延时, chn: 2 - 7
@@ -295,12 +286,11 @@ void timer_delay(int chn, unsigned int us, void (*handler)(void))
 
 	if ( (us > ((1000000/(OSC_CLOCK / 1024 ))*0xffff)) || (us < (1000000/(OSC_CLOCK / 1024)) ))
 	{
-		printf("The timer shoud be in [%d us, %d us] \n",
-			(1000000/(OSC_CLOCK / 1024)), (1000000/(OSC_CLOCK / 1024 )*0xffff));
+		printf("The timer shoud be in [%d us, %d us] \n",(1000000/(OSC_CLOCK / 1024)), (1000000/(OSC_CLOCK / 1024 )*0xffff));
 		return ;
 	}
-
-       _b_set_LedDur = 0;
+	
+	_b_set_LedDur = 0;
 	//CLRREG32(A_CPM_CLKGR, CLKGR_STOP_TCU);
 	OUTREG16(TCU_TECR, TECR_TIMER(chn));
 	
@@ -591,7 +581,7 @@ void Set_Wakeup_timer(int ms)
 	match_counter = (OSC_CLOCK / 1024) / freq;
 	OUTREG16(TCU_TDFR(TCU_TIMER_WAKEUP), match_counter);
 	OUTREG16(TCU_TDHR(TCU_TIMER_WAKEUP), match_counter);
-        OUTREG16(TCU_TCNT(TCU_TIMER_WAKEUP), 0x0000);
+    OUTREG16(TCU_TCNT(TCU_TIMER_WAKEUP), 0x0000);
     
     //JZ_InitEx(CHN,freq ,timer_handler);
     JZ_StartTimerEx(TCU_TIMER_WAKEUP);
